@@ -21,13 +21,7 @@ class AddressParse
         return array_merge($userDetail, $addressDetail);
     }
 
-
-    /**
-     * @param $address
-     * @param $match
-     * @return array
-     */
-    private static function _getUserDetail($address)
+    protected static function _getUserDetail($address)
     {
         //解析结果
         $detail = [
@@ -38,9 +32,9 @@ class AddressParse
         ];
 
         //1. 过滤掉收货地址中的常用说明字符，排除干扰词
-        $address = str_replace(
-            ['收货地址', '地址', '收货人', '收件人', '收货', '邮编', '电话', '身份证号码', '身份证号', '身份证', '：', ':', '；', ';', '，', ',', '。',],
-            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        $address =  preg_replace(
+            "/收货地址|地址|收货人|收件人|收货|邮编|电话|身份证号码|身份证号|身份证|：|:|；|;|，|,|。/",
+            ' ',
             $address
         );
 
@@ -87,8 +81,7 @@ class AddressParse
         return [$detail, $address];
     }
 
-
-    public static function _getAddressDetail($address)
+    protected static function _getAddressDetail($address)
     {
         $address = str_replace(
             ['-'],
