@@ -28,11 +28,11 @@ class AddressParse
             'name'     => '',
             'mobile'   => '',
             'id_card'  => '',
-            'postcode' => '',
+            'zip_code' => '',
         ];
 
         //1. 过滤掉收货地址中的常用说明字符，排除干扰词
-        $address =  preg_replace(
+        $address = preg_replace(
             "/收货地址|地址|收货人|收件人|收货|邮编|电话|身份证号码|身份证号|身份证|：|:|；|;|，|,|。/",
             ' ',
             $address
