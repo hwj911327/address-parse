@@ -90,7 +90,12 @@ class AddressParse
 
     public static function _getAddressDetail($address)
     {
-        $area = include 'area.php';
+        $address = str_replace(
+            ['-'],
+            [''],
+            $address
+        );
+        $area    = include 'area.php';
 
         //匹配 三级地址 这里将【县，区，旗，市】去掉,都江堰市->都江堰
         $arr = [];
@@ -135,17 +140,19 @@ class AddressParse
 
         //基本走到这里 过滤的差不多了 只剩一个了  目前没发现多个 如果有 后续修改
         if ($arr) {
-            //如果还有多个(情感上市不存在的) 就返回第一个把.....
+            //如果还有多个(情感上是不存在的) 就返回第一个把.....
             $arr = current($arr);
-            //去截取出详细地址
-            $district          = mb_substr(mb_substr($arr[2], 0, -1), 7);
+
+            //截取出详细地址  **市 -> **
+            $district          = mb_substr($arr[2], 7);
             $formatted_address = mb_strrchr($address, $district);
-            //检查【县，区，旗，市】是否存在
-            if (mb_strstr($formatted_address, '县') || mb_strstr($formatted_address, '区') || mb_strstr($formatted_address, '旗') || mb_strstr($formatted_address, '市')) {
-                $formatted_address = mb_substr($formatted_address, mb_strlen($district) + 1);
-            } else {
-                $formatted_address = mb_substr($formatted_address, mb_strlen($district));
+            if (!$formatted_address) {
+                $district          = mb_substr(mb_substr($arr[2], 0, -1), 7);
+                $formatted_address = mb_strrchr($address, $district);
             }
+
+            $formatted_address = mb_substr($formatted_address, mb_strlen($district));
+
 
             $detail = [
                 'province'          => [
