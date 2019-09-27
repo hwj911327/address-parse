@@ -1,6 +1,6 @@
 {
     "name": "soul/address-parse",
-    "description": "智能解析收货地址",
+    "description": "收货地址解析，成功率99%以上，支持（身份证号，电话，座机，区号，省市区街道地址)",
     "keywords": [
         "address",
         "parse"
