@@ -104,7 +104,7 @@ class AddressParse
         if ($arr && count($arr) > 1) {
             $arr2 = [];
             foreach ($arr as $k => $value) {
-                if (!mb_strstr($address, mb_substr(mb_substr($value[1], 0, -1), 7))) {
+                if (mb_strstr($address, mb_substr(mb_substr($value[1], 0, -1), 7))) {
                     $arr2[] = $value;
                 }
             }

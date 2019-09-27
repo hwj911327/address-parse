@@ -28,23 +28,3 @@ $sss = \AddressParse\AddressParse::getDetail($address);
 
 print_r($sss);
 
-//[
-//    'name'              => '张三',
-//    'mobile'            => 13633336666,
-//    'id_card'           => '51250119910927226X',
-//    'postcode'          => 617000,
-//    'province'          => [
-//        'code' => 620000,
-//        'name' => '甘肃省',
-//    ],
-//    'city'              => [
-//        'code' => 621200,
-//        'name' => '陇南市',
-//    ],
-//    'district'          => [
-//        'code' => 621221,
-//        'name' => '成县',
-//    ],
-//    'formatted_address' => '市武侯区美领馆路11号附2号'
-//];
-

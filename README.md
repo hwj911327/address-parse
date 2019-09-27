@@ -23,18 +23,18 @@ $res        = AddressParse::getDetail($address)
     'id_card'           => '51250119910927226X',
     'postcode'          => 617000,
     'province'          => [
-        'code' => 620000,
-        'name' => '甘肃省',
+        'code' => 510000,
+        'name' => '四川省',
     ],
     'city'              => [
-        'code' => 621200,
-        'name' => '陇南市',
+        'code' => 510100,
+        'name' => '成都市',
     ],
     'district'          => [
-        'code' => 621221,
-        'name' => '成县',
+        'code' => 510107,
+        'name' => '武侯区',
     ],
-    'formatted_address' => '市武侯区美领馆路11号附2号'
+    'formatted_address' => '美领馆路11号附2号'
 ];
 ```
 
