@@ -33,13 +33,13 @@ class AddressParse
 
         //1. 过滤掉收货地址中的常用说明字符，排除干扰词
         $address = preg_replace(
-            "/收货地址|地址|收货人|收件人|收货|邮编|电话|身份证号码|身份证号|身份证|：|:|；|;|，|,|。/",
+            "/收货地址|地址|收货人|收件人|收货|邮编|电话|身份证号码|身份证号|身份证|：|:|；|;|，|,|。|\.|“|”|\"/",
             ' ',
             $address
         );
 
-        //2. 把空白字符(包括空格\r\n\t)都换成一个空格
-        $address = preg_replace('/\s{1,}/', ' ', $address);
+        //2. 把空白字符(包括空格\r\n\t)都换成一个空格,去除首位空格
+        $address = trim(preg_replace('/\s{1,}/', ' ', $address));
 
         //3. 去除手机号码中的短横线 如136-3333-6666 主要针对苹果手机
         $address = preg_replace('/0-|0?(\d{3})-(\d{4})-(\d{4})/', '$1$2$3', $address);
@@ -83,9 +83,10 @@ class AddressParse
 
     protected static function _getAddressDetail($address)
     {
-        $address = str_replace(
-            ['-'],
-            [''],
+        //1. 过滤干扰字段
+        $address = preg_replace(
+            '/-|_/',
+            '',
             $address
         );
         $area    = include 'area.php';
@@ -160,7 +161,7 @@ class AddressParse
                     'code' => mb_substr($arr[2], 0, 6),
                     'name' => mb_substr($arr[2], 7)
                 ],
-                'formatted_address' => $formatted_address,
+                'formatted_address' => trim($formatted_address),
             ];
         } else {
             $detail = [

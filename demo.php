@@ -23,6 +23,7 @@ require_once './vendor/autoload.php';
 //$address = '四川省成都市都江堰市临湾路9-3-1101';
 //$address = '四川成都都江堰52050号';
 //$address = '河南-济源市-济源市-沁园街道济源大道学苑小区';
+$address = '“广东省-深圳市-龙岗区-****小区-*栋*单元_19C”, "张三".158-6622-5533 ';
 
 $sss = \AddressParse\AddressParse::getDetail($address);
 
