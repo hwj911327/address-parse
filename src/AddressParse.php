@@ -13,10 +13,10 @@ class AddressParse
     public static function getDetail($address)
     {
         //解析用户信息
-        list($userDetail, $address) = self::_getUserDetail($address);
+        $userDetail = self::_getUserDetail($address);
 
         //解析地址详情
-        $addressDetail = self::_getAddressDetail($address);
+        $addressDetail = self::_getAddressDetail($userDetail['address']);
 
         return array_merge($userDetail, $addressDetail);
     }
@@ -78,7 +78,9 @@ class AddressParse
             }
             $address = trim(str_replace($detail['name'], '', $address));
         }
-        return [$detail, $address];
+        $detail['address'] = $address;
+
+        return $detail;
     }
 
     protected static function _getAddressDetail($address)
@@ -146,7 +148,7 @@ class AddressParse
                 $formatted_address = mb_strrchr($address, $district);
             }
             $formatted_address = mb_substr($formatted_address, mb_strlen($district));
-            $formatted_address = preg_replace('/^县|区|旗|市/', '', $formatted_address);
+            $formatted_address = preg_replace('/^(县|区|旗|市){1}/', '', $formatted_address);
 
             $detail = [
                 'province'          => [
