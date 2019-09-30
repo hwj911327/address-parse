@@ -140,13 +140,13 @@ class AddressParse
             //截取出详细地址  **市 -> **
             $district          = mb_substr($arr[2], 7);
             $formatted_address = mb_strrchr($address, $district);
+            //如果没有找到 取消【县，区，旗，市】 再查询一次
             if (!$formatted_address) {
                 $district          = mb_substr(mb_substr($arr[2], 0, -1), 7);
                 $formatted_address = mb_strrchr($address, $district);
             }
-
             $formatted_address = mb_substr($formatted_address, mb_strlen($district));
-
+            $formatted_address = preg_replace('/^县|区|旗|市/', '', $formatted_address);
 
             $detail = [
                 'province'          => [
