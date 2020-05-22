@@ -24,7 +24,7 @@ require_once './vendor/autoload.php';
 //$address = '四川成都都江堰幸福路****号';
 $address = '河南-济源市-济源市-沁园街道济源大道学苑小区';
 //$address = '“广东省-深圳市-龙岗区-****小区-*栋*单元_19C”, "张三".158-6622-5533 ';
-$address = '云南 昆明市 呈贡县 七甸街道 七兴街***号 ';
+$address = '云南 昆明市 呈贡县 七甸街道 七兴街***号 '; 
 
 $sss = \AddressParse\AddressParse::getDetail($address);
 
