@@ -67,8 +67,10 @@ class AddressParse
 
         //再次把2个及其以上的空格合并成一个，并首位TRIM
         $address = trim(preg_replace('/ {2,}/', ' ', $address));
+
         //按照空格切分 长度长的为地址 短的为姓名 因为不是基于自然语言分析，所以采取统计学上高概率的方案
         $split_arr = explode(' ', $address);
+
         if (count($split_arr) > 1) {
             $detail['name'] = $split_arr[0];
             foreach ($split_arr as $value) {
@@ -78,6 +80,8 @@ class AddressParse
             }
             $address = trim(str_replace($detail['name'], '', $address));
         }
+
+
         $detail['address'] = $address;
 
         return $detail;
@@ -87,13 +91,13 @@ class AddressParse
     {
         //1. 过滤干扰字段
         $address = preg_replace(
-            '/-|_/',
+            '/-|_|\//',
             '',
             $address
         );
         $area    = include 'area.php';
 
-        //匹配 三级地址 这里将【县，区，旗，市】去掉,都江堰市->都江堰
+        //匹配 三级地址 这里将【县，区，旗，市,镇】去掉,都江堰市->都江堰
         $arr = [];
         foreach ($area as $value) {
             if (mb_strstr($address, mb_substr(mb_substr($value[2], 0, -1), 7))) {
@@ -122,6 +126,7 @@ class AddressParse
             }
             $arr2 and $arr = $arr2;
         }
+
 
         //多个情况带上【县，区，旗，市】 在匹配一次 如果能匹配上使用新的
         if ($arr && count($arr) > 1) {
