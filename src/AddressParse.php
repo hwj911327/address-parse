@@ -8,15 +8,17 @@
 
 namespace AddressParse;
 
+use GuzzleHttp\Client;
+
 class AddressParse
 {
-    public static function getDetail($address)
+    public static function getDetail($address, $gd_key = '')
     {
         //解析用户信息
         $userDetail = self::_getUserDetail($address);
 
         //解析地址详情
-        $addressDetail = self::_getAddressDetail($userDetail['address']);
+        $addressDetail = self::_getAddressDetail($userDetail['address'], $key);
 
         return array_merge($userDetail, $addressDetail);
     }
@@ -83,98 +85,134 @@ class AddressParse
         return $detail;
     }
 
-    protected static function _getAddressDetail($address)
+    protected static function _getAddressDetail($address, $key = '')
     {
-        //1. 过滤干扰字段
-        $address = preg_replace(
-            '/-|_/',
-            '',
-            $address
-        );
-        $area    = include 'area.php';
+        $detail = [
+            'province'          => ['code' => '', 'name' => ''],
+            'city'              => ['code' => '', 'name' => ''],
+            'district'          => ['code' => '', 'name' => ''],
+            'formatted_address' => '',
+        ];
 
-        //匹配 三级地址 这里将【县，区，旗，市】去掉,都江堰市->都江堰
-        $arr = [];
-        foreach ($area as $value) {
-            if (mb_strstr($address, mb_substr(mb_substr($value[2], 0, -1), 7))) {
-                array_push($arr, $value);
-            }
-        }
-
-        //二级地址 过滤 将没匹配上的剔除
-        if ($arr && count($arr) > 1) {
-            $arr2 = [];
-            foreach ($arr as $k => $value) {
-                if (mb_strstr($address, mb_substr(mb_substr($value[1], 0, -1), 7))) {
-                    $arr2[] = $value;
+        //使用高德地图解析
+        if ($key) {
+            $url      = "https://restapi.amap.com/v3/geocode/geo?key={$key}&s=rsv3&batch=true&address={$address}";
+            $client   = new Client();
+            $response = $client->get($url, ['http_errors' => false]);
+            $code     = $response->getStatusCode();
+            
+            if ($code == 200) {
+                $budy = json_decode($response->getBody()->getContents(), true);
+                if (isset($budy['geocodes'][0])) {
+                    $budy   = $budy['geocodes'][0];
+                    $detail = [
+                        'province'          => [
+                            'code' => mb_substr($budy['adcode'], 0, 2) . '0000',
+                            'name' => $budy['province']?:''
+                        ],
+                        'city'              => [
+                            'code' => $budy['city']?mb_substr($budy['adcode'], 0, 4) . '00':'',
+                            'name' => $budy['city']?:''
+                        ],
+                        'district'          => [
+                            'code' => $budy['district']?$budy['adcode']:'',
+                            'name' => $budy['district']?:''
+                        ],
+                        'formatted_address' => $budy['formatted_address'],
+                    ];
                 }
             }
-            $arr2 and $arr = $arr2;
-        }
-
-        //一级级地址 过滤
-        if ($arr && count($arr) > 1) {
-            $arr2 = [];
-            foreach ($arr as $k => $value) {
-                if (mb_strstr($address, mb_substr(mb_substr($value[0], 0, -1), 7))) {
-                    $arr2[] = $value;
-                }
-            }
-            $arr2 and $arr = $arr2;
-        }
-
-        //多个情况带上【县，区，旗，市】 在匹配一次 如果能匹配上使用新的
-        if ($arr && count($arr) > 1) {
-            $arr2 = [];
-            foreach ($arr as $k => $value) {
-                if (mb_strstr($address, mb_substr($value[2], 7))) {
-                    $arr2[] = $value;
-                }
-            }
-            $arr2 and $arr = $arr2;
-        }
-
-        //基本走到这里 过滤的差不多了 只剩一个了  目前没发现多个 如果有 后续修改
-        if ($arr) {
-            //如果还有多个(情感上是不存在的) 就返回第一个把.....
-            $arr = current($arr);
-
-            //截取出详细地址  **市 -> **
-            $district          = mb_substr($arr[2], 7);
-            $formatted_address = mb_strrchr($address, $district);
-            //如果没有找到 取消【县，区，旗，市】 再查询一次
-            if (!$formatted_address) {
-                $district          = mb_substr(mb_substr($arr[2], 0, -1), 7);
-                $formatted_address = mb_strrchr($address, $district);
-            }
-            $formatted_address = mb_substr($formatted_address, mb_strlen($district));
-            $formatted_address = preg_replace('/^(县|区|旗|市){1}/', '', $formatted_address);
-
-            $detail = [
-                'province'          => [
-                    'code' => mb_substr($arr[0], 0, 6),
-                    'name' => mb_substr($arr[0], 7)
-                ],
-                'city'              => [
-                    'code' => mb_substr($arr[1], 0, 6),
-                    'name' => mb_substr($arr[1], 7)
-                ],
-                'district'          => [
-                    'code' => mb_substr($arr[2], 0, 6),
-                    'name' => mb_substr($arr[2], 7)
-                ],
-                'formatted_address' => trim($formatted_address),
-            ];
         } else {
-            $detail = [
-                'province'          => ['code' => '', 'name' => ''],
-                'city'              => ['code' => '', 'name' => ''],
-                'district'          => ['code' => '', 'name' => ''],
-                'formatted_address' => '',
-            ];
 
+            //1. 过滤干扰字段
+            $address = preg_replace(
+                '/-|_/',
+                '',
+                $address
+            );
+            $area    = include 'area.php';
+
+            //匹配 三级地址 这里将【县，区，旗，市】去掉,都江堰市->都江堰
+            $arr = [];
+            foreach ($area as $value) {
+                if (mb_strstr($address, mb_substr(mb_substr($value[2], 0, -1), 7))) {
+                    array_push($arr, $value);
+                }
+            }
+
+            //二级地址 过滤 将没匹配上的剔除
+            if ($arr && count($arr) > 1) {
+                $arr2 = [];
+                foreach ($arr as $k => $value) {
+                    if (mb_strstr($address, mb_substr(mb_substr($value[1], 0, -1), 7))) {
+                        $arr2[] = $value;
+                    }
+                }
+                $arr2 and $arr = $arr2;
+            }
+
+            //一级级地址 过滤
+            if ($arr && count($arr) > 1) {
+                $arr2 = [];
+                foreach ($arr as $k => $value) {
+                    if (mb_strstr($address, mb_substr(mb_substr($value[0], 0, -1), 7))) {
+                        $arr2[] = $value;
+                    }
+                }
+                $arr2 and $arr = $arr2;
+            }
+
+            //多个情况带上【县，区，旗，市】 在匹配一次 如果能匹配上使用新的
+            if ($arr && count($arr) > 1) {
+                $arr2 = [];
+                foreach ($arr as $k => $value) {
+                    if (mb_strstr($address, mb_substr($value[2], 7))) {
+                        $arr2[] = $value;
+                    }
+                }
+                $arr2 and $arr = $arr2;
+            }
+
+            //基本走到这里 过滤的差不多了 只剩一个了  目前没发现多个 如果有 后续修改
+            if ($arr) {
+                //如果还有多个(情感上是不存在的) 就返回第一个把.....
+                $arr = current($arr);
+
+                //截取出详细地址  **市 -> **
+                $district          = mb_substr($arr[2], 7);
+                $formatted_address = mb_strrchr($address, $district);
+                //如果没有找到 取消【县，区，旗，市】 再查询一次
+                if (!$formatted_address) {
+                    $district          = mb_substr(mb_substr($arr[2], 0, -1), 7);
+                    $formatted_address = mb_strrchr($address, $district);
+                }
+                $formatted_address = mb_substr($formatted_address, mb_strlen($district));
+                $formatted_address = preg_replace('/^(县|区|旗|市){1}/', '', $formatted_address);
+
+                $detail = [
+                    'province'          => [
+                        'code' => mb_substr($arr[0], 0, 6),
+                        'name' => mb_substr($arr[0], 7)
+                    ],
+                    'city'              => [
+                        'code' => mb_substr($arr[1], 0, 6),
+                        'name' => mb_substr($arr[1], 7)
+                    ],
+                    'district'          => [
+                        'code' => mb_substr($arr[2], 0, 6),
+                        'name' => mb_substr($arr[2], 7)
+                    ],
+                    'formatted_address' => trim($formatted_address),
+                ];
+            }
         }
-
+        
         return $detail;
+    }
+
+
+    public function mapRectify($address)
+    {
+
     }
 }
