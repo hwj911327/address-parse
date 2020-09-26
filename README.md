@@ -12,7 +12,8 @@
 ### 1.调用方法
 ```php
 $address    = '身份证号：51250119910927226x 收货地址张三收货地址：成都市武侯区美领馆路11号附2号 617000  136-3333-6666 ';
-$res        = AddressParse::getDetail($address)
+$gd_key     = '******' //高德开放平台(https://lbs.amap.com/)key 非必填 (使用后可提高识别精度)
+$res        = AddressParse::getDetail($address,$gd_key)
 ```
 
 ### 2.返回数组
