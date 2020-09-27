@@ -29,6 +29,7 @@ $address = '广东省佛山市里水镇恒大御景半岛66栋666.收货人：�
 
 $sss = \AddressParse\AddressParse::getDetail($address,'***');
 
+
 print_r($sss);
 
 
