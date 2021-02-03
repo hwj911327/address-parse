@@ -35,7 +35,7 @@ class AddressParse
 
         //1. 过滤掉收货地址中的常用说明字符，排除干扰词
         $address = preg_replace(
-            "/收货地址|地址|收货人|收件人|收货|邮编|电话|身份证号码|身份证号|身份证|：|:|；|;|，|,|。|\.|“|”|\"/",
+            "/收货地址|地址|收货人|收件人|收货|邮编|电话|身份证号码|身份证号|身份证|详细地址|手机号码|所在地区|：|:|；|;|，|,|。|\.|“|”|\"/",
             ' ',
             $address
         );
@@ -94,7 +94,7 @@ class AddressParse
             'district'          => ['code' => '', 'name' => ''],
             'formatted_address' => '',
         ];
-        $address           = preg_replace('/-|_/', '', $address);
+        $address           = preg_replace('/_/', '', $address);
         $formatted_address = preg_replace('/^(\D+?)(市)/', '', $address);
         $formatted_address = preg_replace('/^(\D+?)(区|县|旗)/', '', $formatted_address);
 
