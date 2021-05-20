@@ -8,7 +8,6 @@
 
 namespace AddressParse;
 
-use GuzzleHttp\Client;
 
 class AddressParse
 {
@@ -27,9 +26,9 @@ class AddressParse
     {
         //解析结果
         $detail = [
-            'name'     => '',
-            'mobile'   => '',
-            'id_card'  => '',
+            'name' => '',
+            'mobile' => '',
+            'id_card' => '',
             'zip_code' => '',
         ];
 
@@ -50,21 +49,21 @@ class AddressParse
         preg_match('/\d{18}|\d{17}X/i', $address, $match);
         if ($match && $match[0]) {
             $detail['id_card'] = strtoupper($match[0]);
-            $address           = str_replace($match[0], '', $address);
+            $address = str_replace($match[0], '', $address);
         }
 
         //5. 提取11位手机号码或者7位以上座机号
         preg_match('/\d{7,11}|\d{3,4}-\d{6,8}/', $address, $match);
         if ($match && $match[0]) {
             $detail['mobile'] = $match[0];
-            $address          = str_replace($match[0], '', $address);
+            $address = str_replace($match[0], '', $address);
         }
 
         //6. 提取6位邮编 邮编也可用后面解析出的省市区地址从数据库匹配出
         preg_match('/\d{6}/', $address, $match);
         if ($match && $match[0]) {
             $detail['postcode'] = $match[0];
-            $address            = str_replace($match[0], '', $address);
+            $address = str_replace($match[0], '', $address);
         }
 
         //再次把2个及其以上的空格合并成一个，并首位TRIM
@@ -88,13 +87,13 @@ class AddressParse
     protected static function _getAddressDetail($address, $gd_key = '')
     {
 
-        $detail            = [
-            'province'          => ['code' => '', 'name' => ''],
-            'city'              => ['code' => '', 'name' => ''],
-            'district'          => ['code' => '', 'name' => ''],
+        $detail = [
+            'province' => ['code' => '', 'name' => ''],
+            'city' => ['code' => '', 'name' => ''],
+            'district' => ['code' => '', 'name' => ''],
             'formatted_address' => '',
         ];
-        $address           = preg_replace('/_/', '', $address);
+        $address = preg_replace('/_/', '', $address);
         $formatted_address = preg_replace('/^(\D+?)(市)/', '', $address);
         $formatted_address = preg_replace('/^(\D+?)(区|县|旗)/', '', $formatted_address);
 
@@ -146,17 +145,17 @@ class AddressParse
         //基本走到这里 过滤的差不多了 只剩一个了  目前没发现多个 如果有 后续修改
         if ($arr) {
             //如果还有多个(情感上是不存在的) 就返回第一个把.....
-            $arr    = current($arr);
+            $arr = current($arr);
             $detail = [
-                'province'          => [
+                'province' => [
                     'code' => mb_substr($arr[0], 0, 6),
                     'name' => mb_substr($arr[0], 7)
                 ],
-                'city'              => [
+                'city' => [
                     'code' => mb_substr($arr[1], 0, 6),
                     'name' => mb_substr($arr[1], 7)
                 ],
-                'district'          => [
+                'district' => [
                     'code' => mb_substr($arr[2], 0, 6),
                     'name' => mb_substr($arr[2], 7)
                 ],
@@ -167,39 +166,50 @@ class AddressParse
 
         //使用高德地图进一步分析
         if ($gd_key) {
-            $url      = "https://restapi.amap.com/v3/geocode/geo?key={$gd_key}&s=rsv3&batch=true&address={$address}";
-            $client   = new Client();
-            $response = $client->get($url, ['http_errors' => false]);
-            $code     = $response->getStatusCode();
+            $url = "https://restapi.amap.com/v3/geocode/geo?key={$gd_key}&s=rsv3&batch=true&address={$address}";
+            $body = self::_curlGet($url);
 
-            if ($code == 200) {
-                $body = json_decode($response->getBody()->getContents(), true);
-                if (isset($body['geocodes'][0])) {
-                    $body = $body['geocodes'][0];
-                    if ($detail['province']['code'] == mb_substr($body['adcode'], 0, 2) . '0000') {
-                        $detail['formatted_address'] = $formatted_address ?: $body['formatted_address'];
-                    } else {
-                        $detail = [
-                            'province'          => [
-                                'code' => mb_substr($body['adcode'], 0, 2) . '0000',
-                                'name' => $body['province'] ?: ''
-                            ],
-                            'city'              => [
-                                'code' => $body['city'] ? mb_substr($body['adcode'], 0, 4) . '00' : '',
-                                'name' => $body['city'] ?: ''
-                            ],
-                            'district'          => [
-                                'code' => $body['district'] ? $body['adcode'] : '',
-                                'name' => $body['district'] ?: ''
-                            ],
-                            'formatted_address' => $formatted_address ?: $body['formatted_address'],
-                        ];
-                    }
+            if (isset($body['geocodes'][0])) {
+                $body = $body['geocodes'][0];
+                if ($detail['province']['code'] == mb_substr($body['adcode'], 0, 2) . '0000') {
+                    $detail['formatted_address'] = $formatted_address ?: $body['formatted_address'];
+                } else {
+                    $detail = [
+                        'province' => [
+                            'code' => mb_substr($body['adcode'], 0, 2) . '0000',
+                            'name' => $body['province'] ?: ''
+                        ],
+                        'city' => [
+                            'code' => $body['city'] ? mb_substr($body['adcode'], 0, 4) . '00' : '',
+                            'name' => $body['city'] ?: ''
+                        ],
+                        'district' => [
+                            'code' => $body['district'] ? $body['adcode'] : '',
+                            'name' => $body['district'] ?: ''
+                        ],
+                        'formatted_address' => $formatted_address ?: $body['formatted_address'],
+                    ];
                 }
             }
-        }
 
+        }
 
         return $detail;
     }
+
+
+    protected static function _curlGet($url)
+    {
+        var_dump($url);
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        $data = curl_exec($curl);
+        curl_close($curl);
+
+        return json_decode($data, true);
+    }
+
 }
