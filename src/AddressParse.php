@@ -166,7 +166,7 @@ class AddressParse
 
         //使用高德地图进一步分析
         if ($gd_key) {
-            $url = "https://restapi.amap.com/v3/geocode/geo?key={$gd_key}&s=rsv3&batch=true&address={$address}";
+            $url = "https://restapi.amap.com/v3/geocode/geo?key={$gd_key}&address={$address}";
             $body = self::_curlGet($url);
 
             if (isset($body['geocodes'][0])) {
